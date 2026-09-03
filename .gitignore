@@ -1,0 +1,76 @@
+# ============================================
+# WorkplaceOps
+# ============================================
+
+# --------------------
+# .NET / Visual Studio
+# --------------------
+bin/
+obj/
+.vs/
+*.user
+*.suo
+*.userosscache
+*.sln.docstates
+
+# Build results
+[Dd]ebug/
+[Rr]elease/
+x64/
+x86/
+
+# Test results
+TestResults/
+*.trx
+coverage/
+coverage.*
+
+# NuGet
+*.nupkg
+*.snupkg
+packages/
+
+# --------------------
+# React / Node / Vite
+# --------------------
+node_modules/
+dist/
+.vite/
+
+# npm logs
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+pnpm-debug.log*
+
+# --------------------
+# Environment / Secrets
+# --------------------
+.env
+.env.*
+!.env.example
+
+# ASP.NET local secrets / development files
+appsettings.*.local.json
+
+# --------------------
+# IDE / Editors
+# --------------------
+.idea/
+.vscode/*
+!.vscode/extensions.json
+!.vscode/settings.json
+
+# --------------------
+# Operating System
+# --------------------
+.DS_Store
+Thumbs.db
+desktop.ini
+
+# --------------------
+# Misc
+# --------------------
+*.log
+*.tmp
+*.temp

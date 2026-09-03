@@ -1,0 +1,11 @@
+<Solution>
+  <Project Path="WorkplaceOps.Api/WorkplaceOps.Api.csproj" />
+  <Project Path="WorkplaceOps.Application/WorkplaceOps.Application.csproj" />
+  <Project Path="WorkplaceOps.Client/WorkplaceOps.Client.esproj">
+    <Build />
+    <Deploy />
+  </Project>
+  <Project Path="WorkplaceOps.Domain/WorkplaceOps.Domain.csproj" />
+  <Project Path="WorkplaceOps.Infrastructure/WorkplaceOps.Infrastructure.csproj" />
+  <Project Path="WorkplaceOps.Tests/WorkplaceOps.Tests.csproj" />
+</Solution>
