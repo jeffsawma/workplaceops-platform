@@ -1,4 +1,8 @@
 <Solution>
+  <Folder Name="/Solution Items/">
+    <File Path=".gitignore" />
+    <File Path="README.md" />
+  </Folder>
   <Project Path="WorkplaceOps.Api/WorkplaceOps.Api.csproj" />
   <Project Path="WorkplaceOps.Application/WorkplaceOps.Application.csproj" />
   <Project Path="WorkplaceOps.Client/WorkplaceOps.Client.esproj">
