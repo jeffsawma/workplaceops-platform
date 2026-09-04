@@ -1,5 +1,7 @@
 using Microsoft.EntityFrameworkCore;
 using WorkplaceOps.Infrastructure.Persistence;
+using WorkplaceOps.Application.Businesses;
+using WorkplaceOps.Infrastructure.Businesses;
 
 var builder = WebApplication.CreateBuilder(args);
 
@@ -7,6 +9,9 @@ var builder = WebApplication.CreateBuilder(args);
 builder.Services.AddDbContext<AppDbContext>(options =>
     options.UseSqlServer(
         builder.Configuration.GetConnectionString("DefaultConnection")));
+
+builder.Services.AddScoped<IBusinessRepository, BusinessRepository>();
+builder.Services.AddScoped<BusinessService>();
 
 builder.Services.AddControllers();
 
