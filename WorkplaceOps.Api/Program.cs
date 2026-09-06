@@ -5,6 +5,9 @@ using WorkplaceOps.Infrastructure.Businesses;
 
 var builder = WebApplication.CreateBuilder(args);
 
+// Adding a CORS policy to allow requests from any origin, method, and header
+const string ClientCorsPolicy = "ClientCorsPolicy";
+
 // Add services to the container
 builder.Services.AddDbContext<AppDbContext>(options =>
     options.UseSqlServer(
@@ -19,6 +22,17 @@ builder.Services.AddControllers();
 builder.Services.AddOpenApi();
 builder.Services.AddSwaggerGen();
 
+builder.Services.AddCors(options =>
+{
+    options.AddPolicy(ClientCorsPolicy, policy =>
+    {
+        policy
+            .WithOrigins("http://localhost:64178") // Allow requests from this specific origin
+            .AllowAnyHeader() // Allow any HTTP header
+            .AllowAnyMethod(); // Allow any HTTP method (GET, POST, PUT, DELETE, etc.)
+    });
+});
+
 var app = builder.Build();
 
 // Configure the HTTP request pipeline
@@ -31,6 +45,8 @@ if (app.Environment.IsDevelopment())
 }
 
 app.UseHttpsRedirection();
+
+app.UseCors(ClientCorsPolicy);
 
 app.UseAuthorization();
 

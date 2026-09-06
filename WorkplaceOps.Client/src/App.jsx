@@ -1,122 +1,58 @@
-import { useState } from 'react'
-import heroImg from './assets/hero.png'
-import reactLogo from './assets/react.svg'
-import viteLogo from './assets/vite.svg'
-import './App.css'
+import { useEffect, useState } from 'react'; // useState => stores businesses + loading status, useEffect => fetches businesses from API
+import './App.css';
 
 function App() {
-  const [count, setCount] = useState(0)
+    const [businesses, setBusinesses] = useState([]); // Creates a state variable whose initial value is an empty array
+    const [loading, setLoading] = useState(true);
 
-  return (
-    <>
-      <section id="center">
-        <div className="hero">
-          <img src={heroImg} className="base" width="170" height="179" alt="" />
-          <img src={reactLogo} className="framework" alt="React logo" />
-          <img src={viteLogo} className="vite" alt="Vite logo" />
-        </div>
-        <div>
-          <h1>Get started</h1>
-          <p>
-            Edit <code>src/App.jsx</code> and save to test <code>HMR</code>
-          </p>
-        </div>
-        <button
-          type="button"
-          className="counter"
-          onClick={() => setCount((count) => count + 1)}
-        >
-          Count is {count}
-        </button>
-      </section>
+    useEffect(() => {
+        async function loadBusinesses() { // Defining a funcion that fetches businesses from the API and updates the state
+            try {
+                const response = await fetch('http://localhost:5158/api/Businesses');
 
-      <div className="ticks"></div>
+                if (!response.ok) {
+                    throw new Error('Failed to load businesses.');
+                }
 
-      <section id="next-steps">
-        <div id="docs">
-          <svg className="icon" role="presentation" aria-hidden="true">
-            <use href="/icons.svg#documentation-icon"></use>
-          </svg>
-          <h2>Documentation</h2>
-          <p>Your questions, answered</p>
-          <ul>
-            <li>
-              <a href="https://vite.dev/" target="_blank">
-                <img className="logo" src={viteLogo} alt="" />
-                Explore Vite
-              </a>
-            </li>
-            <li>
-              <a href="https://react.dev/" target="_blank">
-                <img className="button-icon" src={reactLogo} alt="" />
-                Learn more
-              </a>
-            </li>
-          </ul>
-        </div>
-        <div id="social">
-          <svg className="icon" role="presentation" aria-hidden="true">
-            <use href="/icons.svg#social-icon"></use>
-          </svg>
-          <h2>Connect with us</h2>
-          <p>Join the Vite community</p>
-          <ul>
-            <li>
-              <a href="https://github.com/vitejs/vite" target="_blank">
-                <svg
-                  className="button-icon"
-                  role="presentation"
-                  aria-hidden="true"
-                >
-                  <use href="/icons.svg#github-icon"></use>
-                </svg>
-                GitHub
-              </a>
-            </li>
-            <li>
-              <a href="https://chat.vite.dev/" target="_blank">
-                <svg
-                  className="button-icon"
-                  role="presentation"
-                  aria-hidden="true"
-                >
-                  <use href="/icons.svg#discord-icon"></use>
-                </svg>
-                Discord
-              </a>
-            </li>
-            <li>
-              <a href="https://x.com/vite_js" target="_blank">
-                <svg
-                  className="button-icon"
-                  role="presentation"
-                  aria-hidden="true"
-                >
-                  <use href="/icons.svg#x-icon"></use>
-                </svg>
-                X.com
-              </a>
-            </li>
-            <li>
-              <a href="https://bsky.app/profile/vite.dev" target="_blank">
-                <svg
-                  className="button-icon"
-                  role="presentation"
-                  aria-hidden="true"
-                >
-                  <use href="/icons.svg#bluesky-icon"></use>
-                </svg>
-                Bluesky
-              </a>
-            </li>
-          </ul>
-        </div>
-      </section>
+                const data = await response.json(); // Converts the JSON response into a JavaScript object
+                setBusinesses(data); // Updates the businesses state variable with the fetched data
+            } catch (error) { // If any error occurs during the fetch operation, it will be caught here
+                console.error(error); // Logs the error to the console in the browser for debugging purposes // To be improved later with a user-friendly error message displayed in the UI
+            } finally {
+                setLoading(false); // Sets loading to false after the fetch operation is complete, regardless of success or failure
+            }
+        }
 
-      <div className="ticks"></div>
-      <section id="spacer"></section>
-    </>
-  )
+        loadBusinesses(); // Calls the loadBusinesses function to initiate the fetch operation when the component mounts
+    }, []); // Empty dependency array means this effect runs once when App loads for the first time
+
+    if (loading) {
+        return <p>Loading businesses...</p>; // If loading === true, display a loading message to the user while the fetch operation is in progress
+    }
+
+    return ( // This is the main JSX that will display after loading is complete
+        <main>
+            <h1>WorkplaceOps</h1>
+
+            <h2>Businesses</h2>
+
+            {businesses.length === 0 ? (
+                <p>No businesses found.</p>
+            ) : (
+                <ul>
+                    {businesses.map((business) => (
+                        <li key={business.id}>
+                            <strong>{business.legalName}</strong>
+                            {' — '}
+                            {business.employeeCount} employees
+                        </li>
+                    ))}
+                </ul>
+            )}
+        </main>
+    );
 }
 
-export default App
+export default App; // For importing the App component into other parts of the application
+
+// Replacing the current Vite React template with a custom App component that fetches and displays a list of businesses from an API
