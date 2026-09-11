@@ -60,6 +60,7 @@ appsettings.*.local.json
 .vscode/*
 !.vscode/extensions.json
 !.vscode/settings.json
+.cr/
 
 # --------------------
 # Operating System
