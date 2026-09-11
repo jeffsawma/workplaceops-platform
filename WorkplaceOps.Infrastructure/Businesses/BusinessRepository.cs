@@ -24,6 +24,7 @@ public class BusinessRepository : IBusinessRepository
     {
         return await _context.Businesses
             .AsNoTracking() // Used to disable change tracking for better performance when only reading data
+            .OrderByDescending(business => business.CreatedAtUtc)
             .ToListAsync();
     }
 

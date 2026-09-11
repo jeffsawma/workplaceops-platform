@@ -1,9 +1,74 @@
 import { useEffect, useState } from 'react'; // useState => stores businesses + loading status, useEffect => fetches businesses from API
 import './App.css';
 
-function App() {
+function App() { // Defines the main App component that will be rendered in the browser
     const [businesses, setBusinesses] = useState([]); // Creates a state variable whose initial value is an empty array
-    const [loading, setLoading] = useState(true);
+    const [loading, setLoading] = useState(true); // Creates a state variable whose initial value is true, indicating that the data is being loaded
+
+    // These state variables are used to store the values of the form inputs for adding a new business
+    const [legalName, setLegalName] = useState('');
+    const [operatingName, setOperatingName] = useState('');
+    const [quebecEnterpriseNumber, setQuebecEnterpriseNumber] = useState('');
+    const [employeeCount, setEmployeeCount] = useState(''); // Modified
+
+    // Adding these new state variables
+    const [validationErrors, setValidationErrors] = useState({}); // Field-validations
+    const [submitting, setSubmitting] = useState(false);
+    const [generalError, setGeneralError] = useState('');
+
+    // Next we will make the form actually submit to the backend API
+    async function handleSubmit(event) {
+        event.preventDefault();
+
+        setValidationErrors({});
+        setGeneralError('');
+        setSubmitting(true);
+
+        const newBusiness = {
+            legalName,
+            operatingName,
+            quebecEnterpriseNumber,
+            employeeCount: Number(employeeCount) // Modified
+        };
+
+        try {
+            const response = await fetch('http://localhost:5158/api/Businesses', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json'
+                },
+                body: JSON.stringify(newBusiness)
+            });
+
+            if (!response.ok) {
+                const errorData = await response.json();
+
+                if (errorData.errors) {
+                    setValidationErrors(errorData.errors);
+                    return;
+                }
+
+                throw new Error('Failed to create business.');
+            }
+
+            const createdBusiness = await response.json();
+
+            setBusinesses((currentBusinesses) => [
+                createdBusiness,
+                ...currentBusinesses
+            ]);
+
+            setLegalName('');
+            setOperatingName('');
+            setQuebecEnterpriseNumber('');
+            setEmployeeCount(''); // Modified
+        } catch (error) {
+            console.error(error);
+            setGeneralError(error.message);
+        } finally {
+            setSubmitting(false);
+        }
+    }
 
     useEffect(() => {
         async function loadBusinesses() { // Defining a funcion that fetches businesses from the API and updates the state
@@ -32,9 +97,76 @@ function App() {
 
     return ( // This is the main JSX that will display after loading is complete
         <main>
-            <h1>WorkplaceOps</h1>
+            <h1 style={{ fontWeight: 'bold' }}>WorkplaceOps</h1>
+            <br />
 
-            <h2>Businesses</h2>
+            <form onSubmit={handleSubmit}>
+                <h2>Create Business:</h2>
+                <br />
+
+                <div>
+                    <label htmlFor="legalName">Legal name </label>
+                    <input
+                        id="legalName"
+                        type="text"
+                        value={legalName}
+                        onChange={(event) => setLegalName(event.target.value)}
+                    />
+                    {validationErrors.LegalName && (
+                        <p className="validation-error">
+                            {validationErrors.LegalName[0]}
+                        </p>
+                    )}
+                </div>
+
+                <div>
+                    <label htmlFor="operatingName">Operating name </label>
+                    <input
+                        id="operatingName"
+                        type="text"
+                        value={operatingName}
+                        onChange={(event) => setOperatingName(event.target.value)}
+                    />
+                </div>
+
+                <div>
+                    <label htmlFor="quebecEnterpriseNumber">Quebec Enterprise Number </label>
+                    <input
+                        id="quebecEnterpriseNumber"
+                        type="text"
+                        value={quebecEnterpriseNumber}
+                        onChange={(event) => setQuebecEnterpriseNumber(event.target.value)}
+                    />
+                </div>
+
+                <div>
+                    <label htmlFor="employeeCount">Employee count</label>
+                    <input
+                        id="employeeCount"
+                        type="number"
+                        value={employeeCount}
+                        onChange={(event) => setEmployeeCount(event.target.value)}
+                    />
+                    {validationErrors.EmployeeCount && (
+                        <p className="validation-error">
+                            {validationErrors.EmployeeCount[0]}
+                        </p>
+                    )}
+                </div>
+
+                <button type="submit" disabled={submitting}>
+                    {submitting ? 'Creating...' : 'Create Business'}
+                </button>
+                
+                {generalError && (
+                    <p className="general-error">{generalError}</p>
+                )}
+            </form>
+            <br />
+
+            {/* List of Businesses */}
+            <h2>Businesses:</h2>
+            <br />
 
             {businesses.length === 0 ? (
                 <p>No businesses found.</p>
