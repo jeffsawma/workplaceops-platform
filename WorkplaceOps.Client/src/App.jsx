@@ -5,24 +5,26 @@ function App() { // Defines the main App component that will be rendered in the 
     const [businesses, setBusinesses] = useState([]); // Creates a state variable whose initial value is an empty array
     const [loading, setLoading] = useState(true); // Creates a state variable whose initial value is true, indicating that the data is being loaded
 
-    // These state variables are used to store the values of the form inputs for adding a new business
+    // Form input state for creating a new business
     const [legalName, setLegalName] = useState('');
     const [operatingName, setOperatingName] = useState('');
     const [quebecEnterpriseNumber, setQuebecEnterpriseNumber] = useState('');
     const [employeeCount, setEmployeeCount] = useState('');
 
+    // Form validation and general error state
+    const [validationErrors, setValidationErrors] = useState({});
+    const [generalError, setGeneralError] = useState('');
 
-    // Adding these new state variables
-    const [validationErrors, setValidationErrors] = useState({}); // Validations errors for fields
-    const [generalError, setGeneralError] = useState(''); // Non-validations errors
-    const [submitting, setSubmitting] = useState(false); // Form submission
+    // Form submission state
+    const [submitting, setSubmitting] = useState(false);
 
-    const [selectedBusiness, setSelectedBusiness] = useState(null); // Making each business in the list selectable
-    const [detailsLoading, setDetailsLoading] = useState(false); // For displaying the details of the business selected
+    // Selected business and business details state
+    const [selectedBusiness, setSelectedBusiness] = useState(null);
+    const [detailsLoading, setDetailsLoading] = useState(false);
+    const [detailsError, setDetailsError] = useState('');
 
 
-    // Next we will make the form actually submit to the backend API
-    async function handleSubmit(event) {
+    async function handleSubmit(event) {  // Next we will make the form actually submit to the backend API
         event.preventDefault();
 
         setValidationErrors({});
@@ -75,9 +77,10 @@ function App() { // Defines the main App component that will be rendered in the 
         }
     }
 
-    // We will make the businesses inside the list clickable and with that we will display their details
-    async function loadBusinessDetails(id) {
+    
+    async function loadBusinessDetails(id) { // We will make the businesses inside the list clickable and with that we will display their details
         setDetailsLoading(true);
+        setDetailsError('');
 
         try {
             const response = await fetch(`http://localhost:5158/api/Businesses/${id}`
@@ -91,6 +94,7 @@ function App() { // Defines the main App component that will be rendered in the 
             setSelectedBusiness(data);
         } catch (error) {
             console.error(error);
+            setDetailsError(error.message);
         } finally {
             setDetailsLoading(false);
         }
@@ -105,12 +109,12 @@ function App() { // Defines the main App component that will be rendered in the 
                     throw new Error('Failed to load businesses.');
                 }
 
-                const data = await response.json(); // Converts the JSON response into a JavaScript object
-                setBusinesses(data); // Updates the businesses state variable with the fetched data
-            } catch (error) { // If any error occurs during the fetch operation, it will be caught here
-                console.error(error); // Logs the error to the console in the browser for debugging purposes // To be improved later with a user-friendly error message displayed in the UI
+                const data = await response.json();
+                setBusinesses(data);
+            } catch (error) {
+                console.error(error); 
             } finally {
-                setLoading(false); // Sets loading to false after the fetch operation is complete, regardless of success or failure
+                setLoading(false);
             }
         }
 
@@ -118,7 +122,7 @@ function App() { // Defines the main App component that will be rendered in the 
     }, []); // Empty dependency array means this effect runs once when App loads for the first time
 
     if (loading) {
-        return <p>Loading businesses...</p>; // If loading === true, display a loading message to the user while the fetch operation is in progress
+        return <p>Loading businesses...</p>; 
     }
 
     return ( // This is the main JSX that will display after loading is complete
@@ -202,6 +206,11 @@ function App() { // Defines the main App component that will be rendered in the 
                         <li key={business.id}>
                             <button
                                 type="button"
+                                className={
+                                    selectedBusiness?.id === business.id
+                                        ? 'business-button selected'
+                                        : 'business-button'
+                                }
                                 onClick={() => loadBusinessDetails(business.id)}
                             >
                                 <strong>{business.legalName}</strong>
@@ -213,9 +222,13 @@ function App() { // Defines the main App component that will be rendered in the 
                 </ul>
             )}
             
-
+            {/* Business details */}
             {detailsLoading && (
                 <p>Loading business details...</p>
+            )}
+
+            {detailsError && (
+                <p className="details-error">{detailsError}</p>
             )}
 
             {selectedBusiness && (
@@ -258,4 +271,3 @@ function App() { // Defines the main App component that will be rendered in the 
 
 export default App; // For importing the App component into other parts of the application
 
-// Replacing the current Vite React template with a custom App component that fetches and displays a list of businesses from an API
