@@ -9,12 +9,17 @@ function App() { // Defines the main App component that will be rendered in the 
     const [legalName, setLegalName] = useState('');
     const [operatingName, setOperatingName] = useState('');
     const [quebecEnterpriseNumber, setQuebecEnterpriseNumber] = useState('');
-    const [employeeCount, setEmployeeCount] = useState(''); // Modified
+    const [employeeCount, setEmployeeCount] = useState('');
+
 
     // Adding these new state variables
-    const [validationErrors, setValidationErrors] = useState({}); // Field-validations
-    const [submitting, setSubmitting] = useState(false);
-    const [generalError, setGeneralError] = useState('');
+    const [validationErrors, setValidationErrors] = useState({}); // Validations errors for fields
+    const [generalError, setGeneralError] = useState(''); // Non-validations errors
+    const [submitting, setSubmitting] = useState(false); // Form submission
+
+    const [selectedBusiness, setSelectedBusiness] = useState(null); // Making each business in the list selectable
+    const [detailsLoading, setDetailsLoading] = useState(false); // For displaying the details of the business selected
+
 
     // Next we will make the form actually submit to the backend API
     async function handleSubmit(event) {
@@ -28,7 +33,7 @@ function App() { // Defines the main App component that will be rendered in the 
             legalName,
             operatingName,
             quebecEnterpriseNumber,
-            employeeCount: Number(employeeCount) // Modified
+            employeeCount: Number(employeeCount)
         };
 
         try {
@@ -61,12 +66,33 @@ function App() { // Defines the main App component that will be rendered in the 
             setLegalName('');
             setOperatingName('');
             setQuebecEnterpriseNumber('');
-            setEmployeeCount(''); // Modified
+            setEmployeeCount('');
         } catch (error) {
             console.error(error);
             setGeneralError(error.message);
         } finally {
             setSubmitting(false);
+        }
+    }
+
+    // We will make the businesses inside the list clickable and with that we will display their details
+    async function loadBusinessDetails(id) {
+        setDetailsLoading(true);
+
+        try {
+            const response = await fetch(`http://localhost:5158/api/Businesses/${id}`
+            );
+
+            if (!response.ok) {
+                throw new Error('Failed to load business details.');
+            }
+
+            const data = await response.json();
+            setSelectedBusiness(data);
+        } catch (error) {
+            console.error(error);
+        } finally {
+            setDetailsLoading(false);
         }
     }
 
@@ -174,12 +200,57 @@ function App() { // Defines the main App component that will be rendered in the 
                 <ul>
                     {businesses.map((business) => (
                         <li key={business.id}>
-                            <strong>{business.legalName}</strong>
-                            {' — '}
-                            {business.employeeCount} employees
+                            <button
+                                type="button"
+                                onClick={() => loadBusinessDetails(business.id)}
+                            >
+                                <strong>{business.legalName}</strong>
+                                {' — '}
+                                {business.employeeCount} employees
+                            </button>
                         </li>
                     ))}
                 </ul>
+            )}
+            
+
+            {detailsLoading && (
+                <p>Loading business details...</p>
+            )}
+
+            {selectedBusiness && (
+                <section className="business-details">
+                    <h2>Business Details:</h2>
+                    <br />
+
+                    <div>
+                        <strong>Legal name:</strong>
+                        <span>{selectedBusiness.legalName}</span>
+                    </div>
+
+                    <div>
+                        <strong>Operating name:</strong>
+                        <span>{selectedBusiness.operatingName || 'N/A'}</span>
+                    </div>
+
+                    <div>
+                        <strong>Quebec Enterprise Number:</strong>
+                        <span>{selectedBusiness.quebecEnterpriseNumber || 'N/A'}</span>
+                    </div>
+
+                    <div>
+                        <strong>Employee count:</strong>
+                        <span>{selectedBusiness.employeeCount}</span>
+                    </div>
+
+                    <div>
+                        <strong>Created at:</strong>
+                        <span>
+                            {new Date(`${selectedBusiness.createdAtUtc}Z`).toLocaleString()}
+                        </span>
+
+                    </div>
+                </section>
             )}
         </main>
     );
