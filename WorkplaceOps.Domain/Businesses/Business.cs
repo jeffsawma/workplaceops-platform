@@ -2,7 +2,7 @@
 
 public class Business
 {
-    public Guid Id { get; set; } // Unique identifier for the business entity
+    public Guid Id { get; set; } // PK // Unique identifier for the business entity
 
     public string LegalName { get; set; } = string.Empty; // Required property, cannot be null or empty
 
@@ -13,6 +13,11 @@ public class Business
     public int EmployeeCount { get; set; } // Required property, cannot be null
 
     public DateTime CreatedAtUtc { get; set; } // Required property, cannot be null, represents the creation time in UTC
+
+    // Navigation relationships
+    public BusinessOperationalProfile? OperationalProfile { get; set; } // one-to-one relationship
 }
 
-// The Business class represents a business entity with properties such as Id, LegalName, OperatingName, QuebecEnterpriseNumber, EmployeeCount, and CreatedAtUtc
+// Business: identity/basic facts
+
+
