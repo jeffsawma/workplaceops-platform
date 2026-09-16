@@ -13,8 +13,12 @@ builder.Services.AddDbContext<AppDbContext>(options =>
     options.UseSqlServer(
         builder.Configuration.GetConnectionString("DefaultConnection")));
 
+// Registering the repositories and services 
 builder.Services.AddScoped<IBusinessRepository, BusinessRepository>();
 builder.Services.AddScoped<BusinessService>();
+
+builder.Services.AddScoped<IBusinessOperationalProfileRepository, BusinessOperationalProfileRepository>();
+builder.Services.AddScoped<BusinessOperationalProfileService>();
 
 builder.Services.AddControllers();
 
@@ -52,4 +56,4 @@ app.UseAuthorization();
 
 app.MapControllers();
 
-app.Run();
+await app.RunAsync();
