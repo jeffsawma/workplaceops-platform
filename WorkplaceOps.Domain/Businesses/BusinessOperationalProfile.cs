@@ -3,17 +3,11 @@
 public class BusinessOperationalProfile
 {
     public Guid Id { get; set; } // PK 
-
     public Guid BusinessId { get; set; } // FK for Business
-
     public string? Industry { get; set; }
-
     public int LocationCount { get; set; }
-
     public bool HasRemoteEmployees { get; set; }
-
     public bool HasUnionizedEmployees { get; set; }
-
     public DateTime CreatedAtUtc { get; set; }
 
     // Navigation relationships

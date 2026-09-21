@@ -210,6 +210,7 @@ form label {
 form input {
   width: 100%;
   box-sizing: border-box;
+  font-size: 0.8rem;
 }
 
 form button {
@@ -300,3 +301,12 @@ li {
     font-size: 0.9rem;
 }
 
+/* Aligns the Operational Profile form with the Create Business form */
+.operational-profile-form {
+    transform: translateX(-25px);
+}
+
+.operational-profile-subtitle {
+    margin-top: 0;
+    margin-bottom: 2.5rem;
+}

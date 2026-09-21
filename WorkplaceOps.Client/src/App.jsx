@@ -406,12 +406,13 @@ function App() { // Defines the main App component that will be rendered in the 
                             </div>
                         </>
                     ) : (
-                        <form 
+                        <form
+                            className="operational-profile-form"
                             onSubmit={handleOperationalProfileSubmit}
                             noValidate
                         >
-                            <h3>Create Business Operational Profile:</h3>
-
+                            <h3 className="operational-profile-subtitle">
+                                Create Business Operational Profile:</h3>
                             <div>
                                 <label htmlFor="industry">Industry</label>
                                     <input
