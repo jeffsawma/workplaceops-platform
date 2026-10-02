@@ -2,6 +2,8 @@ using Microsoft.EntityFrameworkCore;
 using WorkplaceOps.Infrastructure.Persistence;
 using WorkplaceOps.Application.Businesses;
 using WorkplaceOps.Infrastructure.Businesses;
+using WorkplaceOps.Application.Rules;
+using WorkplaceOps.Infrastructure.Rules;
 
 var builder = WebApplication.CreateBuilder(args);
 
@@ -19,6 +21,10 @@ builder.Services.AddScoped<BusinessService>();
 
 builder.Services.AddScoped<IBusinessOperationalProfileRepository, BusinessOperationalProfileRepository>();
 builder.Services.AddScoped<BusinessOperationalProfileService>();
+
+builder.Services.AddScoped<IRuleRepository, RuleRepository>();
+builder.Services.AddScoped<RuleService>();
+
 
 builder.Services.AddControllers();
 

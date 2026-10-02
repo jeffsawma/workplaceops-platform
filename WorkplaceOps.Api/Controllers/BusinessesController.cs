@@ -4,7 +4,7 @@ using WorkplaceOps.Application.Businesses;
 namespace WorkplaceOps.Api.Controllers;
 
 [ApiController]
-[Route("api/[Controller]")]
+[Route("api/[controller]")]
 public class BusinessesController : ControllerBase
 {
     private readonly BusinessService _businessService;
@@ -24,7 +24,7 @@ public class BusinessesController : ControllerBase
 
         // Return a 201 Created response with the location of the newly created business
         return CreatedAtAction(
-            nameof(GetBusinesses),
+            nameof(GetBusinessById),
             new { id = business.Id },
             business);
     }

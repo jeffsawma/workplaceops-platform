@@ -1,5 +1,4 @@
 ﻿namespace WorkplaceOps.Domain.Rules;
-
 public class Rule
 {
     public Guid Id { get; set; }

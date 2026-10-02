@@ -1,6 +1,7 @@
 ﻿using Microsoft.EntityFrameworkCore;
 using System.Security.Cryptography;
 using WorkplaceOps.Domain.Businesses;
+using WorkplaceOps.Domain.Rules;
 
 namespace WorkplaceOps.Infrastructure.Persistence;
 
@@ -11,9 +12,10 @@ public class AppDbContext : DbContext
     {
     }
 
-    // DbSet for the Business entity
+    // DbSet for the Business, BusinessOperationalProfile and Rule entities
     public DbSet<Business> Businesses => Set<Business>(); // This property represents the collection of Business entities in the database
     public DbSet<BusinessOperationalProfile> BusinessOperationalProfiles => Set<BusinessOperationalProfile>();
+    public DbSet<Rule> Rules => Set<Rule>();
 
     protected override void OnModelCreating(ModelBuilder modelBuilder)
     {
