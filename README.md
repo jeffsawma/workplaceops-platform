@@ -1,94 +1,74 @@
 # WorkplaceOps
 
-WorkplaceOps is a Quebec-first workplace operations platform designed to help
-small and medium-sized businesses turn regulatory requirements, business
-changes, and recurring administrative responsibilities into clear,
-actionable workflows.
+WorkplaceOps is an early-stage full-stack workplace operations platform focused on helping Quebec businesses turn operational and regulatory information into structured, actionable work.
 
-The long-term goal is to reduce administrative friction for business owners,
-managers, and employees by determining what actions are relevant, assigning
-them to the appropriate people, tracking completion, and maintaining an
-auditable history of the work performed.
+The long-term goal is to model the characteristics of a business, determine which requirements and operational rules apply, generate relevant workflows, and maintain a clear history of why actions were created and how they were completed.
 
-> **Status:** Early development / architecture phase.
+> **Status:** Active early-stage development. The core architecture and first end-to-end business-management features are implemented, but the platform is not yet production-ready.
 
 ---
 
-## Product Vision
+## Current Implementation
 
-Small and medium-sized businesses often rely on a combination of spreadsheets,
-calendars, emails, government websites, documents, and manual reminders to
-manage workplace responsibilities.
+The project already includes several working vertical slices across the backend, database, and React client.
 
-WorkplaceOps aims to provide a centralized operational layer that can
-eventually:
+### Business Management
 
-- Model important information about a business and its workplaces
-- Detect relevant business events and operational changes
-- Evaluate applicable rules and requirements
-- Generate actionable workflows
-- Assign work to owners, managers, and employees
-- Track recurring responsibilities and deadlines
-- Monitor important business thresholds
-- Maintain evidence and historical records
-- Explain why specific actions were generated
-- Help teams understand what changed and what they need to do next
+Businesses can currently be:
 
-The objective is not simply to display regulatory information.
+- Created through the API and React interface
+- Listed
+- Retrieved by ID
+- Persisted in SQL Server
 
-WorkplaceOps is intended to transform relevant business and regulatory
-information into work that people can actually complete.
+A business currently contains information such as:
 
----
+- Legal name
+- Operating name
+- Quebec Enterprise Number
+- Employee count
+- Creation timestamp
 
-## Core Product Direction
+### Business Operational Profiles
 
-The platform is being designed around several interconnected concepts:
+Each business can have an operational profile describing characteristics that future regulatory rules can evaluate.
 
-```text
-Business Digital Twin
-        |
-        v
-Business Events
-        |
-        v
-Rules Engine
-        |
-        v
-Operational Impact
-        |
-        v
-Workflows
-        |
-        v
-Employee / Manager Actions
-        |
-        v
-Evidence & History
-```
+Current profile data includes:
 
-Examples of business events may eventually include:
+- Industry
+- Number of locations
+- Whether the business has remote employees
+- Whether the business has unionized employees
 
-- Employee hired
-- Employee changes role
-- Employee begins a new activity
-- Employee certification approaches expiry
-- Workforce size crosses an important threshold
-- Payroll approaches a threshold
-- A new establishment opens
-- Company operations change
-- A policy changes
-- A relevant external requirement changes
+The React client can create, retrieve, and display these profiles.
 
-The rules engine will evaluate these events against the characteristics of a
-business and determine which operational actions should be generated.
+### Regulatory Rules
+
+The initial regulatory-rule domain and persistence layer are implemented.
+
+A rule currently contains:
+
+- Title
+- Description
+- Version
+- Active status
+- Creation timestamp
+
+The API currently supports:
+
+- Creating rules
+- Listing rules
+- Retrieving individual rules
+
+Rule persistence is implemented with Entity Framework Core and SQL Server.
+
+The actual rule-evaluation engine that determines which rules apply to a business is a future development phase.
 
 ---
 
 ## Architecture
 
-WorkplaceOps uses a modular full-stack architecture with a separately
-developed frontend and backend.
+WorkplaceOps uses a layered full-stack architecture:
 
 ```text
 React Client
@@ -123,55 +103,62 @@ WorkplaceOps
 |-- WorkplaceOps.Client
 |-- WorkplaceOps.Domain
 |-- WorkplaceOps.Infrastructure
-`-- WorkplaceOps.Tests
+|-- WorkplaceOps.Tests
+`-- WorkplaceOps.slnx
 ```
 
-### Layer Responsibilities
+### `WorkplaceOps.Domain`
 
-#### `WorkplaceOps.Domain`
+Contains the core business entities and domain concepts.
 
-Contains the core business concepts and business rules.
+Current domain concepts include:
 
-The Domain layer is intended to remain independent of persistence,
-presentation, and infrastructure technologies.
+```text
+Business
+BusinessOperationalProfile
+Rule
+```
 
-#### `WorkplaceOps.Application`
+### `WorkplaceOps.Application`
 
-Contains application use cases and coordinates operations involving the
-domain.
+Contains application services, use cases, request models, and repository abstractions.
 
-#### `WorkplaceOps.Infrastructure`
+### `WorkplaceOps.Infrastructure`
 
-Contains infrastructure concerns such as:
+Contains persistence implementations and Entity Framework Core integration.
 
-- Entity Framework Core
+Current infrastructure includes:
+
 - SQL Server persistence
-- External service implementations
-- File storage
-- Notifications
-- Other infrastructure integrations
+- Entity Framework Core
+- Repository implementations
+- Database migrations
 
-#### `WorkplaceOps.Api`
+### `WorkplaceOps.Api`
 
-ASP.NET Core Web API responsible for exposing the backend through HTTP
-endpoints.
+ASP.NET Core Web API exposing the application through REST endpoints.
 
-#### `WorkplaceOps.Client`
+Current controllers include:
 
-React and JavaScript frontend responsible for the user interface and
-interaction with the backend API.
+- Businesses
+- Business operational profiles
+- Regulatory rules
 
-#### `WorkplaceOps.Tests`
+### `WorkplaceOps.Client`
 
-Automated tests for domain and application behavior.
+React and JavaScript frontend responsible for the current user interface and communication with the backend API.
+
+### `WorkplaceOps.Tests`
+
+Reserved for automated domain and application testing as the project develops.
+
+Meaningful automated test coverage has not yet been implemented.
 
 ---
 
-## Backend
+## Technology Stack
 
-The backend is built with the Microsoft .NET ecosystem.
-
-### Current Backend Technologies
+### Backend
 
 - C#
 - .NET 10
@@ -179,30 +166,8 @@ The backend is built with the Microsoft .NET ecosystem.
 - Entity Framework Core
 - REST APIs
 - Swagger / OpenAPI
-- xUnit
 
-As the application evolves, the backend is expected to include concepts such
-as:
-
-- Dependency injection
-- Authentication
-- Authorization
-- Validation
-- Background processing
-- Rule evaluation
-- Domain events
-- Notifications
-- Audit logging
-- Multi-tenancy
-- Application security
-
----
-
-## Frontend
-
-The frontend is built as an independent React application.
-
-### Current Frontend Technologies
+### Frontend
 
 - React
 - JavaScript
@@ -211,153 +176,203 @@ The frontend is built as an independent React application.
 - CSS3
 - ESLint
 
-Bootstrap may be introduced where reusable components and responsive
-utilities provide value, while custom CSS will be used to establish the
-product's own visual identity.
+### Database
 
-The frontend communicates with the ASP.NET Core backend through HTTP and JSON.
-
----
-
-## Database
-
-WorkplaceOps uses Microsoft SQL Server as its relational database platform.
-
-### Current Database Technologies
-
-- Microsoft SQL Server 2022
+- Microsoft SQL Server
 - Entity Framework Core
 - LINQ
 - SQL
+- EF Core migrations
 
-The project will intentionally combine Entity Framework Core development with
-direct SQL practice to maintain a strong understanding of the underlying
-relational database model and generated queries.
+### Development Tools
 
-Database development is expected to include:
-
-- Relational modeling
-- Primary and foreign keys
-- Constraints
-- Joins
-- Indexes
-- Transactions
-- Migrations
-- Query optimization
-- Concurrency
-- Data integrity
-
----
-
-## API Development and Testing
-
-The API development workflow uses:
-
+- Git
+- GitHub
 - Swagger
-- OpenAPI
 - Postman
-
-Postman will be used for manual API testing, including:
-
-- Request and response validation
-- Authentication flows
-- Authorization scenarios
-- Error handling
-- Endpoint collections
-- Integration testing during development
+- Visual Studio
+- npm
 
 ---
 
-## Planned Domain Concepts
+## Database Migrations
 
-The domain model is expected to evolve around concepts such as:
+The project currently includes migrations for:
 
-```text
-Business
-Establishment
-Employee
-BusinessEvent
-Rule
-Obligation
-Workflow
-Action
-EvidenceRecord
-Notification
+- Initial business persistence
+- Business operational profiles
+- Regulatory rules
+
+Entity Framework Core maintains the current relational model through the Infrastructure project.
+
+---
+
+## Current Frontend
+
+The React client currently supports:
+
+- Creating businesses
+- Listing businesses
+- Selecting and viewing business details
+- Creating business operational profiles
+- Loading and displaying existing operational profiles
+- Form validation and loading/error feedback
+
+The frontend currently communicates with the API through the local development environment.
+
+---
+
+## Local Development
+
+### Prerequisites
+
+You will need:
+
+- .NET 10 SDK
+- Node.js and npm
+- Microsoft SQL Server
+
+The current development configuration uses a local SQL Server connection with Windows trusted authentication.
+
+### Run the Backend
+
+From the repository root:
+
+```bash
+dotnet run --project WorkplaceOps.Api
 ```
 
-These concepts will evolve as product discovery and implementation continue.
+The local HTTP API is configured at:
+
+```text
+http://localhost:5158
+```
+
+Swagger is available when the API is running in the Development environment.
+
+### Run the Frontend
+
+From the repository root:
+
+```bash
+cd WorkplaceOps.Client
+npm install
+npm run dev
+```
+
+The Vite development server is configured at:
+
+```text
+http://localhost:64178
+```
+
+### Build the Solution
+
+```bash
+dotnet build WorkplaceOps.slnx
+```
+
+### Build the Frontend
+
+```bash
+cd WorkplaceOps.Client
+npm run build
+```
+
+### Lint the Frontend
+
+```bash
+npm run lint
+```
 
 ---
 
-## Development Goals
+## Product Direction
 
-WorkplaceOps is being developed both as a potential commercial SaaS product
-and as a serious full-stack software engineering project.
+The broader WorkplaceOps concept is designed around a progression such as:
 
-The project is intended to provide deeper practical experience with:
+```text
+Business Profile
+      |
+      v
+Business Events
+      |
+      v
+Regulatory / Operational Rules
+      |
+      v
+Rule Evaluation
+      |
+      v
+Operational Impact
+      |
+      v
+Workflows and Actions
+      |
+      v
+Evidence and History
+```
 
-- JavaScript
-- React
-- C#
-- .NET
-- ASP.NET Core
-- Entity Framework Core
-- Microsoft SQL Server
-- SQL
-- REST API design
-- Relational database design
+The current project is building the foundation required for that model.
+
+---
+
+## Planned Development
+
+Major future areas include:
+
+- Regulatory rule evaluation
+- Rule applicability based on business characteristics
+- Business events
+- Operational impact determination
+- Workflow and action generation
+- Employee and manager tasks
 - Authentication and authorization
-- Multi-tenant SaaS architecture
-- Rule engines
+- Multi-tenant architecture
+- Notifications
+- Evidence and audit history
 - Background processing
+- Expanded validation
+- Automated test coverage
+- Production configuration
+- CI/CD
+- Deployment
+
+These features are part of the roadmap and should not be considered implemented yet.
+
+---
+
+## Development Purpose
+
+WorkplaceOps is being developed both as a potential product concept and as a substantial full-stack software engineering project.
+
+The project is being used to deepen practical experience with:
+
+- Domain modeling
+- Layered application architecture
+- C# and ASP.NET Core
+- Entity Framework Core
+- SQL Server
+- REST API design
+- React
+- Relational database design
+- Rule-based systems
 - Testing
 - Application security
-- Git and GitHub
-- CI/CD
-- Production deployment
-
----
-
-## Current Development Status
-
-The initial solution architecture has been established.
-
-Current foundation:
-
-- ASP.NET Core backend solution
-- Domain layer
-- Application layer
-- Infrastructure layer
-- React / JavaScript frontend
-- xUnit test project
-- Successful backend build
-- Successful frontend production build
-
-The next development phase will focus on:
-
-1. Designing the initial business domain model
-2. Configuring Entity Framework Core
-3. Connecting Microsoft SQL Server 2022
-4. Creating the first database migration
-5. Implementing the first API vertical slice
-6. Testing the API with Postman
-7. Connecting the React frontend to the backend
+- Production architecture
 
 ---
 
 ## Disclaimer
 
-WorkplaceOps is intended to support workplace operations and administrative
-organization.
+WorkplaceOps is intended to support workplace operations and administrative organization.
 
-It is not intended to provide legal, accounting, tax, or other professional
-advice.
+It is not intended to provide legal, accounting, tax, or other professional advice.
 
 ---
 
 ## License
 
-This project is currently private and proprietary.
+No open-source license is currently provided for this repository.
 
-No license for redistribution, modification, or commercial use is granted at
-this stage.
+The source code is publicly available for portfolio and review purposes. No permission for redistribution, modification, or commercial reuse is granted unless explicitly stated otherwise.
