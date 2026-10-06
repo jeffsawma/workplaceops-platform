@@ -1,5 +1,4 @@
 ﻿using Microsoft.EntityFrameworkCore;
-using System.Security.Cryptography;
 using WorkplaceOps.Domain.Businesses;
 using WorkplaceOps.Domain.Rules;
 
@@ -16,6 +15,7 @@ public class AppDbContext : DbContext
     public DbSet<Business> Businesses => Set<Business>(); // This property represents the collection of Business entities in the database
     public DbSet<BusinessOperationalProfile> BusinessOperationalProfiles => Set<BusinessOperationalProfile>();
     public DbSet<Rule> Rules => Set<Rule>();
+    public DbSet<RuleCondition> RuleConditions => Set<RuleCondition>();
 
     protected override void OnModelCreating(ModelBuilder modelBuilder)
     {
@@ -26,5 +26,11 @@ public class AppDbContext : DbContext
             .WithOne(profile => profile.Business)
             .HasForeignKey<BusinessOperationalProfile>(
                 profile => profile.BusinessId);
+
+        modelBuilder.Entity<Rule>()
+            .HasMany(rule => rule.Conditions)
+            .WithOne(condition => condition.Rule)
+            .HasForeignKey(condition => condition.RuleId)
+            .OnDelete(DeleteBehavior.Cascade); // Ensure that when a Rule is deleted, its associated RuleConditions are also deleted
     }
 }

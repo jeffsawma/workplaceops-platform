@@ -24,6 +24,7 @@ public class RuleRepository : IRuleRepository
     {
         return await _context.Rules
             .AsNoTracking()
+            .Include(rule => rule.Conditions) // Include the associated RuleConditions when retrieving Rules
             .OrderByDescending(rule => rule.CreatedAtUtc)
             .ToListAsync();
     }
@@ -32,6 +33,13 @@ public class RuleRepository : IRuleRepository
     {
         return await _context.Rules
             .AsNoTracking()
+            .Include(rule => rule.Conditions)
             .FirstOrDefaultAsync(rule => rule.Id == id);
+    }
+
+    public async Task AddConditionAsync(RuleCondition condition) // Implement the method to add a RuleCondition to the database
+    {
+        await _context.RuleConditions.AddAsync(condition);
+        await _context.SaveChangesAsync();
     }
 }

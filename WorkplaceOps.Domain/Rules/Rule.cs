@@ -7,5 +7,6 @@ public class Rule
     public int Version { get; set; } = 1;
     public bool IsActive { get; set; }
     public DateTime CreatedAtUtc { get; set; }
+    public List<RuleCondition> Conditions { get; set; } = []; // Navigation property for the associated RuleConditions
 }
 

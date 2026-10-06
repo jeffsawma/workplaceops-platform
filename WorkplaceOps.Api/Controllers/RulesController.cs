@@ -52,4 +52,26 @@ public class RulesController : ControllerBase
 
         return Ok(rule);
     }
+
+
+    // POST: api/rules/{ruleId}/conditions
+    [HttpPost("{ruleId:guid}/conditions")]
+    [ProducesResponseType(StatusCodes.Status201Created)]
+    [ProducesResponseType(StatusCodes.Status400BadRequest)]
+    [ProducesResponseType(StatusCodes.Status404NotFound)]
+    public async Task<IActionResult> AddCondition(
+        Guid ruleId,
+        CreateRuleConditionRequest request)
+    {
+        try
+        {
+            var condition = await _ruleService.AddConditionAsync(ruleId, request);
+
+            return StatusCode(StatusCodes.Status201Created, condition);
+        }
+        catch (KeyNotFoundException exception)
+        {
+            return NotFound(new { message = exception.Message });
+        }
+    }
 }
