@@ -59,6 +59,13 @@ public class RuleEvaluator
                     profile.HasUnionizedEmployees,
                     condition.Operator,
                     condition.ComparisonValue),
+
+            RuleConditionField.Industry =>
+                profile is not null &&
+                EvaluateStringCondition(
+                    profile.Industry,
+                    condition.Operator,
+                    condition.ComparisonValue),
             _ => false
         };
     }
@@ -99,6 +106,30 @@ public class RuleEvaluator
         {
             RuleConditionOperator.Equal => actualValue == expectedValue,
             RuleConditionOperator.NotEqual => actualValue != expectedValue,
+            _ => false
+        };
+    }
+
+    private bool EvaluateStringCondition(
+        string? actualValue,
+        RuleConditionOperator conditionOperator,
+        string comparisonValue)
+    {
+        if (string.IsNullOrWhiteSpace(actualValue) ||
+            string.IsNullOrWhiteSpace(comparisonValue))
+        {
+            return false;
+        }
+
+        bool matches = string.Equals(
+            actualValue,
+            comparisonValue,
+            StringComparison.OrdinalIgnoreCase); // Tells C# to ignore uppercase and lowercase when comparing the two strings
+
+        return conditionOperator switch
+        {
+            RuleConditionOperator.Equal => matches,
+            RuleConditionOperator.NotEqual => !matches,
             _ => false
         };
     }

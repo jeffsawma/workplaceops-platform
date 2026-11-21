@@ -40,6 +40,7 @@ public class RuleEvaluatorTests
         Assert.True(result);
     }
 
+
     [Fact]
     public void Evaluate_ReturnsFalse_WhenEmployeeCountBelowThreshold()
     {
@@ -68,6 +69,7 @@ public class RuleEvaluatorTests
 
         Assert.False(result);
     }
+
 
     [Theory]
     [InlineData(3, true)]
@@ -104,6 +106,7 @@ public class RuleEvaluatorTests
         Assert.Equal(expectedResult, result);
     }
 
+
     [Theory]
     [InlineData(true, true)]
     [InlineData(false, false)]
@@ -139,6 +142,7 @@ public class RuleEvaluatorTests
         Assert.Equal(expectedResult, result);
     }
 
+
     [Theory]
     [InlineData(true, false)]
     [InlineData(false, true)]
@@ -167,6 +171,43 @@ public class RuleEvaluatorTests
         var profile = new BusinessOperationalProfile
         {
             HasUnionizedEmployees = hasUnionizedEmployees
+        };
+
+        var result = evaluator.Evaluate(rule, business, profile);
+
+        Assert.Equal(expectedResult, result);
+    }
+
+
+    [Theory]
+    [InlineData("Retail", true)]
+    [InlineData("retail", true)]
+    [InlineData("Manufacturing", false)]
+    public void Evaluate_ReturnsExpectedResult_ForIndustry(
+        string industry,
+        bool expectedResult)
+    {
+        var evaluator = new RuleEvaluator();
+
+        var rule = new Rule
+        {
+            IsActive = true,
+            Conditions =
+            [
+                new RuleCondition
+                {
+                    Field = RuleConditionField.Industry,
+                    Operator = RuleConditionOperator.Equal,
+                    ComparisonValue = "Retail"
+                }
+            ]
+        };
+
+        var business = new Business();
+
+        var profile = new BusinessOperationalProfile
+        {
+            Industry = industry
         };
 
         var result = evaluator.Evaluate(rule, business, profile);
