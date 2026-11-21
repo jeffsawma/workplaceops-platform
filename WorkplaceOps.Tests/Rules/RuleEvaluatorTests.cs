@@ -68,4 +68,39 @@ public class RuleEvaluatorTests
 
         Assert.False(result);
     }
+
+    [Theory]
+    [InlineData(3, true)]
+    [InlineData(1, false)]
+    public void Evaluate_ReturnsExpectedResult_ForLocationCount(
+        int locationCount,
+        bool expectedResult)
+    {
+        var evaluator = new RuleEvaluator();
+
+        var rule = new Rule
+        {
+            IsActive = true,
+            Conditions =
+            [
+                new RuleCondition
+                {
+                    Field = RuleConditionField.LocationCount,
+                    Operator = RuleConditionOperator.GreaterThanOrEqual,
+                    ComparisonValue = "2"
+                }
+            ]
+        };
+
+        var business = new Business();
+
+        var profile = new BusinessOperationalProfile
+        {
+            LocationCount = locationCount
+        };
+
+        var result = evaluator.Evaluate(rule, business, profile);
+
+        Assert.Equal(expectedResult, result);
+    }
 }

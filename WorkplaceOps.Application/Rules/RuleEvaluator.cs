@@ -39,6 +39,13 @@ public class RuleEvaluator
                     condition.Operator,
                     condition.ComparisonValue),
 
+            RuleConditionField.LocationCount =>
+                profile is not null &&
+                EvaluateIntegerCondition(
+                    profile.LocationCount,
+                    condition.Operator,
+                    condition.ComparisonValue),
+
             _ => false
         };
     }
