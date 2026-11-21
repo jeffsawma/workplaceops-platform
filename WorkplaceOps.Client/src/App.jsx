@@ -12,8 +12,9 @@ function App() { // Defines the main App component that will be rendered in the 
     const [employeeCount, setEmployeeCount] = useState('');
 
     // State for the Create Business validation and non-validation errors
+    // general error is when 
     const [validationErrors, setValidationErrors] = useState({});
-    const [generalError, setGeneralError] = useState('');
+    const [generalError, setGeneralError] = useState(''); 
 
     // State that tracks whether the Create Business form is currently being submitted
     const [submitting, setSubmitting] = useState(false);

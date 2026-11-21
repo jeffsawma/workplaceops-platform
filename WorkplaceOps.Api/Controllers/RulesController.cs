@@ -53,7 +53,6 @@ public class RulesController : ControllerBase
         return Ok(rule);
     }
 
-
     // POST: api/rules/{ruleId}/conditions
     [HttpPost("{ruleId:guid}/conditions")]
     [ProducesResponseType(StatusCodes.Status201Created)]
