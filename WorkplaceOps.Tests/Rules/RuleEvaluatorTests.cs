@@ -103,4 +103,74 @@ public class RuleEvaluatorTests
 
         Assert.Equal(expectedResult, result);
     }
+
+    [Theory]
+    [InlineData(true, true)]
+    [InlineData(false, false)]
+    public void Evaluate_ReturnsExpectedResult_ForRemoteEmployees(
+        bool hasRemoteEmployees,
+        bool expectedResult)
+    {
+        var evaluator = new RuleEvaluator();
+
+        var rule = new Rule
+        {
+            IsActive = true,
+            Conditions =
+            [
+                new RuleCondition
+                {
+                    Field = RuleConditionField.HasRemoteEmployees,
+                    Operator = RuleConditionOperator.Equal,
+                    ComparisonValue = "true"
+                }
+            ]
+        };
+
+        var business = new Business();
+
+        var profile = new BusinessOperationalProfile
+        {
+            HasRemoteEmployees = hasRemoteEmployees
+        };
+
+        var result = evaluator.Evaluate(rule, business, profile);
+
+        Assert.Equal(expectedResult, result);
+    }
+
+    [Theory]
+    [InlineData(true, false)]
+    [InlineData(false, true)]
+    public void Evaluate_ReturnsExpectedResult_ForUnionizedEmployees(
+        bool hasUnionizedEmployees,
+        bool expectedResult)
+    {
+        var evaluator = new RuleEvaluator();
+
+        var rule = new Rule
+        {
+            IsActive = true,
+            Conditions =
+            [
+                new RuleCondition
+                {
+                    Field = RuleConditionField.HasUnionizedEmployees,
+                    Operator = RuleConditionOperator.NotEqual,
+                    ComparisonValue = "true"
+                }
+            ]
+        };
+
+        var business = new Business();
+
+        var profile = new BusinessOperationalProfile
+        {
+            HasUnionizedEmployees = hasUnionizedEmployees
+        };
+
+        var result = evaluator.Evaluate(rule, business, profile);
+
+        Assert.Equal(expectedResult, result);
+    }
 }

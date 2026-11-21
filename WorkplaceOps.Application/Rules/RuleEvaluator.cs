@@ -46,6 +46,19 @@ public class RuleEvaluator
                     condition.Operator,
                     condition.ComparisonValue),
 
+            RuleConditionField.HasRemoteEmployees =>
+                profile is not null &&
+                EvaluateBooleanCondition(
+                    profile.HasRemoteEmployees,
+                    condition.Operator,
+                    condition.ComparisonValue),
+
+            RuleConditionField.HasUnionizedEmployees =>
+                profile is not null &&
+                EvaluateBooleanCondition(
+                    profile.HasUnionizedEmployees,
+                    condition.Operator,
+                    condition.ComparisonValue),
             _ => false
         };
     }
@@ -71,6 +84,25 @@ public class RuleEvaluator
             _ => false
         };
     }
+
+    private bool EvaluateBooleanCondition(
+        bool actualValue,
+        RuleConditionOperator conditionOperator,
+        string comparisonValue)
+    {
+        if (!bool.TryParse(comparisonValue, out var expectedValue))
+        {
+            return false;
+        }
+
+        return conditionOperator switch
+        {
+            RuleConditionOperator.Equal => actualValue == expectedValue,
+            RuleConditionOperator.NotEqual => actualValue != expectedValue,
+            _ => false
+        };
+    }
 }
 
 // Contains the actual rule-evaluation logic
+
