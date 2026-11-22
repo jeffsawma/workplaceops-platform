@@ -1,7 +1,4 @@
-﻿using Microsoft.VisualBasic;
-using System.Linq.Expressions;
-using System.Security.AccessControl;
-using WorkplaceOps.Application.Rules;
+﻿using WorkplaceOps.Application.Rules;
 using WorkplaceOps.Domain.Businesses;
 using WorkplaceOps.Domain.Rules;
 
@@ -443,5 +440,56 @@ public class RuleEvaluatorTests
         var result = evaluator.Evaluate(rule, business, profile);
 
         Assert.False(result);
+    }
+
+
+    // Testing all six integer comparison operators for the EmployeeCount field to ensure they behave as expected
+    [Theory]
+    [InlineData(RuleConditionOperator.Equal, 20, true)]
+    [InlineData(RuleConditionOperator.Equal, 19, false)]
+
+    [InlineData(RuleConditionOperator.NotEqual, 19, true)]
+    [InlineData(RuleConditionOperator.NotEqual, 20, false)]
+
+    [InlineData(RuleConditionOperator.GreaterThan, 21, true)]
+    [InlineData(RuleConditionOperator.GreaterThan, 20, false)]
+
+    [InlineData(RuleConditionOperator.GreaterThanOrEqual, 20, true)]
+    [InlineData(RuleConditionOperator.GreaterThanOrEqual, 19, false)]
+
+    [InlineData(RuleConditionOperator.LessThan, 19, true)]
+    [InlineData(RuleConditionOperator.LessThan, 20, false)]
+
+    [InlineData(RuleConditionOperator.LessThanOrEqual, 20, true)]
+    [InlineData(RuleConditionOperator.LessThanOrEqual, 21, false)]
+    public void Evaluate_ReturnsExpectedResult_ForIntegerOperators(
+    RuleConditionOperator conditionOperator,
+    int employeeCount,
+    bool expectedResult)
+    {
+        var evaluator = new RuleEvaluator();
+
+        var rule = new Rule
+        {
+            IsActive = true,
+            Conditions =
+            [
+                new RuleCondition
+            {
+                Field = RuleConditionField.EmployeeCount,
+                Operator = conditionOperator,
+                ComparisonValue = "20"
+            }
+            ]
+        };
+
+        var business = new Business
+        {
+            EmployeeCount = employeeCount
+        };
+
+        var result = evaluator.Evaluate(rule, business, null);
+
+        Assert.Equal(expectedResult, result);
     }
 }
