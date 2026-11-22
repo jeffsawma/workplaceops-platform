@@ -1,224 +1,176 @@
 # WorkplaceOps
 
-WorkplaceOps is an early-stage full-stack workplace operations platform focused on helping Quebec businesses turn operational and regulatory information into structured, actionable work.
+WorkplaceOps is an early-stage, full-stack workplace operations platform focused on helping businesses in Québec organize business information, evaluate structured operational and regulatory rules, and ultimately turn applicable requirements into actionable workflows.
 
-The long-term goal is to model the characteristics of a business, determine which requirements and operational rules apply, generate relevant workflows, and maintain a clear history of why actions were created and how they were completed.
+The long-term product vision is a traceable flow from **business profile → business event → rule evaluation → obligations and actions → tasks → evidence and audit history**.
 
-> **Status:** Active early-stage development. The core architecture and first end-to-end business-management features are implemented, but the platform is not yet production-ready.
+> **Project status (November 2026):** Active development; not production-ready. Business management, operational profiles, persisted rules and rule conditions, and the first deterministic rule-evaluation engine are implemented. Rule evaluation is currently available in application code and automated tests, **not yet through a public API endpoint or the React UI**.
 
 ---
 
-## Current Implementation
-
-The project already includes several working vertical slices across the backend, database, and React client.
+## Implemented Features
 
 ### Business Management
 
-Businesses can currently be:
+- Create and list businesses through the API and React client.
+- Retrieve individual business details.
+- Persist data in Microsoft SQL Server using Entity Framework Core.
 
-- Created through the API and React interface
-- Listed
-- Retrieved by ID
-- Persisted in SQL Server
-
-A business currently contains information such as:
-
-- Legal name
-- Operating name
-- Quebec Enterprise Number
-- Employee count
-- Creation timestamp
+Each business currently stores a legal name, optional operating name, optional Québec Enterprise Number (NEQ), employee count, and creation timestamp.
 
 ### Business Operational Profiles
 
-Each business can have an operational profile describing characteristics that future regulatory rules can evaluate.
+A business can have an associated operational profile containing:
 
-Current profile data includes:
+- **Industry** (text)
+- **LocationCount** (integer)
+- **HasRemoteEmployees** (Boolean)
+- **HasUnionizedEmployees** (Boolean)
 
-- Industry
-- Number of locations
-- Whether the business has remote employees
-- Whether the business has unionized employees
+Profiles can be created, retrieved, and displayed through the API and React client.
 
-The React client can create, retrieve, and display these profiles.
+### Regulatory Rules and Conditions
 
-### Regulatory Rules
+Rules are stored in SQL Server and include a title, optional description, version, active status, and creation timestamp.
 
-The initial regulatory-rule domain and persistence layer are implemented.
+Each rule can contain multiple persisted `RuleCondition` records. A condition specifies:
 
-A rule currently contains:
+- **Field:** the business or profile property to evaluate
+- **Operator:** the comparison to perform
+- **ComparisonValue:** the expected value, stored as text and parsed as appropriate
 
-- Title
-- Description
-- Version
-- Active status
-- Creation timestamp
+The API supports creating rules, listing rules, retrieving a rule with its conditions, and adding conditions to an existing rule. Rule conditions are loaded with their parent rules through EF Core.
 
-The API currently supports:
+### Deterministic Rule Evaluation — OWPS-13 (In Progress)
 
-- Creating rules
-- Listing rules
-- Retrieving individual rules
+`RuleEvaluator` in `WorkplaceOps.Application` evaluates an in-memory `Rule` against a `Business` and an optional `BusinessOperationalProfile`.
 
-Rule persistence is implemented with Entity Framework Core and SQL Server.
+**Supported fields**
 
-The actual rule-evaluation engine that determines which rules apply to a business is a future development phase.
+| Field | Type | Supported operators |
+| --- | --- | --- |
+| `EmployeeCount` | Integer | `Equal`, `NotEqual`, `GreaterThan`, `GreaterThanOrEqual`, `LessThan`, `LessThanOrEqual` |
+| `LocationCount` | Integer | All six integer operators |
+| `HasRemoteEmployees` | Boolean | `Equal`, `NotEqual` |
+| `HasUnionizedEmployees` | Boolean | `Equal`, `NotEqual` |
+| `Industry` | String | `Equal`, `NotEqual` (case-insensitive) |
+
+**Current evaluation behavior**
+
+- An inactive rule or a rule with no conditions returns `false`.
+- All conditions are combined with **AND** logic; every condition must pass.
+- Missing operational profiles, invalid comparison values, and unsupported operators cause the affected condition to evaluate to `false`.
+- Industry comparisons use `StringComparison.OrdinalIgnoreCase`.
+- Evaluation uses deterministic C# logic; **no AI is involved**.
+- The current return type is `bool` (`true` for a matching rule, `false` otherwise). Explicit `Applicable` / `NotApplicable` results and API integration are next steps.
+
+For example, a rule requiring `EmployeeCount >= 20`, `Industry == "Retail"`, and `HasRemoteEmployees == true` matches only when all three conditions are satisfied.
+
+> Rule definitions and examples in this project are development fixtures; they should not be interpreted as verified legal requirements for Québec businesses.
+
+---
+
+## Automated Tests
+
+`WorkplaceOps.Tests` uses **xUnit** to test the rule evaluator independently from the API, frontend, and database.
+
+The current test suite includes **38 passing test cases** (last verified during local development in November 2026), covering:
+
+- Employee count and location count comparisons
+- Remote and unionized employee Boolean comparisons
+- Case-insensitive industry matching
+- Multiple conditions with AND semantics
+- Inactive rules and rules without conditions
+- Missing operational profiles
+- Invalid comparison values and unsupported operators
+- All six integer comparison operators, including boundary cases
+
+Run the tests from the repository root:
+
+```powershell
+dotnet test .\WorkplaceOps.Tests\WorkplaceOps.Tests.csproj
+```
+
+The test count is a development snapshot, not a claim of complete application or integration-test coverage.
 
 ---
 
 ## Architecture
 
-WorkplaceOps uses a layered full-stack architecture:
+WorkplaceOps is organized into separate projects with clear responsibilities:
 
 ```text
-React Client
-     |
-     | HTTP / JSON
-     v
-ASP.NET Core Web API
-     |
-     v
-Application Layer
-     |
-     v
-Domain Layer
-     ^
-     |
-Infrastructure Layer
-     |
-     v
-Entity Framework Core
-     |
-     v
-Microsoft SQL Server
+WorkplaceOps.Client (React + Vite)
+              |
+          HTTP / JSON
+              v
+WorkplaceOps.Api (ASP.NET Core)
+              |
+              v
+WorkplaceOps.Application (services, use cases, rule evaluation)
+         |                             |
+         v                             v
+WorkplaceOps.Domain              Repository interfaces
+(entities and enums)                    ^
+                                       |
+                            WorkplaceOps.Infrastructure
+                            (EF Core repositories, migrations)
+                                       |
+                                       v
+                              Microsoft SQL Server
+
+WorkplaceOps.Tests -> Domain + Application
 ```
 
 ### Solution Structure
 
 ```text
-WorkplaceOps
-|
-|-- WorkplaceOps.Api
-|-- WorkplaceOps.Application
-|-- WorkplaceOps.Client
-|-- WorkplaceOps.Domain
-|-- WorkplaceOps.Infrastructure
-|-- WorkplaceOps.Tests
-`-- WorkplaceOps.slnx
+WorkplaceOps/
+├── WorkplaceOps.Api/
+├── WorkplaceOps.Application/
+├── WorkplaceOps.Client/
+├── WorkplaceOps.Domain/
+├── WorkplaceOps.Infrastructure/
+├── WorkplaceOps.Tests/
+└── WorkplaceOps.slnx
 ```
 
-### `WorkplaceOps.Domain`
+| Project | Responsibility |
+| --- | --- |
+| `WorkplaceOps.Domain` | Business, operational-profile, rule, and rule-condition models and enums |
+| `WorkplaceOps.Application` | Application services, request models, repository contracts, and `RuleEvaluator` |
+| `WorkplaceOps.Infrastructure` | EF Core `AppDbContext`, SQL Server repositories, and database migrations |
+| `WorkplaceOps.Api` | REST controllers, dependency injection, Swagger/OpenAPI configuration |
+| `WorkplaceOps.Client` | React interface for businesses and operational profiles |
+| `WorkplaceOps.Tests` | xUnit tests for application and domain behavior |
 
-Contains the core business entities and domain concepts.
+### Technology Stack
 
-Current domain concepts include:
-
-```text
-Business
-BusinessOperationalProfile
-Rule
-```
-
-### `WorkplaceOps.Application`
-
-Contains application services, use cases, request models, and repository abstractions.
-
-### `WorkplaceOps.Infrastructure`
-
-Contains persistence implementations and Entity Framework Core integration.
-
-Current infrastructure includes:
-
-- SQL Server persistence
-- Entity Framework Core
-- Repository implementations
-- Database migrations
-
-### `WorkplaceOps.Api`
-
-ASP.NET Core Web API exposing the application through REST endpoints.
-
-Current controllers include:
-
-- Businesses
-- Business operational profiles
-- Regulatory rules
-
-### `WorkplaceOps.Client`
-
-React and JavaScript frontend responsible for the current user interface and communication with the backend API.
-
-### `WorkplaceOps.Tests`
-
-Reserved for automated domain and application testing as the project develops.
-
-Meaningful automated test coverage has not yet been implemented.
+- **Backend:** C#, .NET 10, ASP.NET Core Web API, Entity Framework Core 10, LINQ
+- **Frontend:** React 19, JavaScript, Vite 8, HTML, CSS, ESLint
+- **Database:** Microsoft SQL Server, SQL, EF Core migrations
+- **Testing:** xUnit, Microsoft.NET.Test.Sdk, coverlet collector
+- **Development:** Visual Studio, Git/GitHub, PowerShell, Swagger/OpenAPI, npm
 
 ---
 
-## Technology Stack
+## Current API Surface
 
-### Backend
+These endpoints are implemented:
 
-- C#
-- .NET 10
-- ASP.NET Core Web API
-- Entity Framework Core
-- REST APIs
-- Swagger / OpenAPI
+| Method | Endpoint | Purpose |
+| --- | --- | --- |
+| `POST` | `/api/Businesses` | Create a business |
+| `GET` | `/api/Businesses` | List businesses |
+| `GET` | `/api/Businesses/{id}` | Retrieve a business |
+| `POST` | `/api/BusinessOperationalProfiles` | Create a profile |
+| `GET` | `/api/BusinessOperationalProfiles/business/{businessId}` | Retrieve a profile by business |
+| `POST` | `/api/Rules` | Create a rule |
+| `GET` | `/api/Rules` | List rules |
+| `GET` | `/api/Rules/{id}` | Retrieve a rule, including conditions |
+| `POST` | `/api/Rules/{ruleId}/conditions` | Add a rule condition |
 
-### Frontend
-
-- React
-- JavaScript
-- Vite
-- HTML5
-- CSS3
-- ESLint
-
-### Database
-
-- Microsoft SQL Server
-- Entity Framework Core
-- LINQ
-- SQL
-- EF Core migrations
-
-### Development Tools
-
-- Git
-- GitHub
-- Swagger
-- Postman
-- Visual Studio
-- npm
-
----
-
-## Database Migrations
-
-The project currently includes migrations for:
-
-- Initial business persistence
-- Business operational profiles
-- Regulatory rules
-
-Entity Framework Core maintains the current relational model through the Infrastructure project.
-
----
-
-## Current Frontend
-
-The React client currently supports:
-
-- Creating businesses
-- Listing businesses
-- Selecting and viewing business details
-- Creating business operational profiles
-- Loading and displaying existing operational profiles
-- Form validation and loading/error feedback
-
-The frontend currently communicates with the API through the local development environment.
+**Not implemented yet:** An API endpoint that invokes `RuleEvaluator` for a stored rule and business; an `Applicable` / `NotApplicable` response model; and a corresponding React rule-evaluation interface.
 
 ---
 
@@ -226,150 +178,95 @@ The frontend currently communicates with the API through the local development e
 
 ### Prerequisites
 
-You will need:
-
 - .NET 10 SDK
 - Node.js and npm
 - Microsoft SQL Server
+- A configured local SQL Server connection string for `WorkplaceOps.Api`
 
-The current development configuration uses a local SQL Server connection with Windows trusted authentication.
+The current development setup uses local SQL Server with Windows authentication. Ensure SQL Server is running and the configured connection is accessible.
 
 ### Run the Backend
 
 From the repository root:
 
-```bash
-dotnet run --project WorkplaceOps.Api
+```powershell
+dotnet run --project .\WorkplaceOps.Api\WorkplaceOps.Api.csproj
 ```
 
-The local HTTP API is configured at:
+Default local HTTP address: **http://localhost:5158**
 
-```text
-http://localhost:5158
-```
-
-Swagger is available when the API is running in the Development environment.
+Swagger UI (Development environment): **http://localhost:5158/swagger**
 
 ### Run the Frontend
 
-From the repository root:
+Open a second terminal at the repository root:
 
-```bash
-cd WorkplaceOps.Client
+```powershell
+cd .\WorkplaceOps.Client
 npm install
 npm run dev
 ```
 
-The Vite development server is configured at:
+Configured Vite address: **http://localhost:64178**
 
-```text
-http://localhost:64178
+The API's current development CORS policy allows requests from `http://localhost:64178`. If the frontend runs on a different port, the API CORS configuration must be updated accordingly.
+
+### Build and Test
+
+From the repository root:
+
+```powershell
+dotnet build .\WorkplaceOps.slnx
+dotnet test .\WorkplaceOps.Tests\WorkplaceOps.Tests.csproj
 ```
 
-### Build the Solution
+From `WorkplaceOps.Client`:
 
-```bash
-dotnet build WorkplaceOps.slnx
-```
-
-### Build the Frontend
-
-```bash
-cd WorkplaceOps.Client
+```powershell
 npm run build
-```
-
-### Lint the Frontend
-
-```bash
 npm run lint
 ```
 
----
+### Database
 
-## Product Direction
-
-The broader WorkplaceOps concept is designed around a progression such as:
-
-```text
-Business Profile
-      |
-      v
-Business Events
-      |
-      v
-Regulatory / Operational Rules
-      |
-      v
-Rule Evaluation
-      |
-      v
-Operational Impact
-      |
-      v
-Workflows and Actions
-      |
-      v
-Evidence and History
-```
-
-The current project is building the foundation required for that model.
+The project uses EF Core migrations for businesses, operational profiles, rules, and rule conditions. The database is not provisioned automatically by starting the React client. Apply the relevant migrations to your local SQL Server database before using persistence-backed endpoints.
 
 ---
 
-## Planned Development
+## Development Roadmap
 
-Major future areas include:
+### Rules Engine
 
-- Regulatory rule evaluation
-- Rule applicability based on business characteristics
-- Business events
-- Operational impact determination
-- Workflow and action generation
-- Employee and manager tasks
-- Authentication and authorization
-- Multi-tenant architecture
-- Notifications
-- Evidence and audit history
-- Background processing
-- Expanded validation
-- Automated test coverage
-- Production configuration
-- CI/CD
-- Deployment
+- **OWPS-10 — Define Rule model:** Complete
+- **OWPS-11 — Persist Rules:** Complete
+- **OWPS-12 — Define Rule conditions:** Complete
+- **OWPS-13 — Evaluate Rule against Business profile:** Core engine and unit tests implemented; explicit applicability result and API integration remain
+- **OWPS-14 — Explain Rule evaluation:** Planned
 
-These features are part of the roadmap and should not be considered implemented yet.
+### Broader Platform
+
+Planned capabilities include:
+
+- Business events and operational-impact determination
+- Obligations, actions, workflows, and task assignment
+- Evidence collection and audit trails
+- Threshold monitoring
+- Authentication, authorization, and tenant isolation
+- Notifications and background processing
+- Additional validation and integration tests
+- Security hardening, CI/CD, production configuration, and deployment
+
+These features remain on the roadmap and are **not** represented as currently implemented.
 
 ---
 
 ## Development Purpose
 
-WorkplaceOps is being developed both as a potential product concept and as a substantial full-stack software engineering project.
-
-The project is being used to deepen practical experience with:
-
-- Domain modeling
-- Layered application architecture
-- C# and ASP.NET Core
-- Entity Framework Core
-- SQL Server
-- REST API design
-- React
-- Relational database design
-- Rule-based systems
-- Testing
-- Application security
-- Production architecture
-
----
+WorkplaceOps is being developed as both a potential product and a substantial software engineering project. It provides hands-on experience in domain modeling, layered architecture, REST API design, EF Core, SQL Server, React, deterministic rule engines, and automated testing.
 
 ## Disclaimer
 
-WorkplaceOps is intended to support workplace operations and administrative organization.
-
-It is not intended to provide legal, accounting, tax, or other professional advice.
-
----
+WorkplaceOps is intended to support workplace operations and administrative organization. It is not a source of legal, accounting, tax, or other professional advice, and it is not currently production-ready.
 
 ## License
 
