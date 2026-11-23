@@ -4,7 +4,7 @@ WorkplaceOps is an early-stage, full-stack workplace operations platform focused
 
 The long-term product vision is a traceable flow from **business profile → business event → rule evaluation → obligations and actions → tasks → evidence and audit history**.
 
-> **Project status (November 2026):** Active development; not production-ready. Business management, operational profiles, persisted rules and rule conditions, and the first deterministic rule-evaluation engine are implemented. Rule evaluation is currently available in application code and automated tests, **not yet through a public API endpoint or the React UI**.
+> **Project status (November 2026):** Active development; not production-ready. Business management, operational profiles, persisted rules and rule conditions, and the first deterministic rule-evaluation engine are implemented. Rule evaluation is currently available in application code and automated tests, **available through a REST API endpoint but not yet through the React UI**.
 
 ---
 
@@ -41,7 +41,7 @@ Each rule can contain multiple persisted `RuleCondition` records. A condition sp
 
 The API supports creating rules, listing rules, retrieving a rule with its conditions, and adding conditions to an existing rule. Rule conditions are loaded with their parent rules through EF Core.
 
-### Deterministic Rule Evaluation — OWPS-13 (In Progress)
+### Deterministic Rule Evaluation — OWPS-13 (Complete)
 
 `RuleEvaluator` in `WorkplaceOps.Application` evaluates an in-memory `Rule` against a `Business` and an optional `BusinessOperationalProfile`.
 
@@ -62,7 +62,7 @@ The API supports creating rules, listing rules, retrieving a rule with its condi
 - Missing operational profiles, invalid comparison values, and unsupported operators cause the affected condition to evaluate to `false`.
 - Industry comparisons use `StringComparison.OrdinalIgnoreCase`.
 - Evaluation uses deterministic C# logic; **no AI is involved**.
-- The current return type is `bool` (`true` for a matching rule, `false` otherwise). Explicit `Applicable` / `NotApplicable` results and API integration are next steps.
+- `Evaluate()` returns `bool` (`true` or `false`); `EvaluateApplicability()` converts that result into `RuleApplicability.Applicable` or `RuleApplicability.NotApplicable`. The REST API returns the applicability value as a readable string.
 
 For example, a rule requiring `EmployeeCount >= 20`, `Industry == "Retail"`, and `HasRemoteEmployees == true` matches only when all three conditions are satisfied.
 
@@ -74,7 +74,7 @@ For example, a rule requiring `EmployeeCount >= 20`, `Industry == "Retail"`, and
 
 `WorkplaceOps.Tests` uses **xUnit** to test the rule evaluator independently from the API, frontend, and database.
 
-The current test suite includes **38 passing test cases** (last verified during local development in November 2026), covering:
+The current test suite includes **40 passing test cases** (last verified during local development in November 2026), covering:
 
 - Employee count and location count comparisons
 - Remote and unionized employee Boolean comparisons
@@ -84,6 +84,7 @@ The current test suite includes **38 passing test cases** (last verified during 
 - Missing operational profiles
 - Invalid comparison values and unsupported operators
 - All six integer comparison operators, including boundary cases
+- Explicit `Applicable` and `NotApplicable` result mapping
 
 Run the tests from the repository root:
 
@@ -92,6 +93,18 @@ dotnet test .\WorkplaceOps.Tests\WorkplaceOps.Tests.csproj
 ```
 
 The test count is a development snapshot, not a claim of complete application or integration-test coverage.
+
+### Manual API Verification
+
+The rule-evaluation endpoint was manually verified through Swagger against persisted SQL Server records:
+
+- **200 OK / Applicable:** an employee-count rule matched a business with 29 employees against a threshold of 20.
+- **200 OK / NotApplicable:** the same rule did not match a business with 11 employees.
+- **404 Not Found:** a nonexistent rule ID returned `Rule not found.`.
+- **404 Not Found:** a nonexistent business ID returned `Business not found.`.
+- **200 OK / Applicable:** a persisted Industry = Technology condition matched a business's persisted operational profile.
+
+These are **manual API smoke tests**, not automated integration tests.
 
 ---
 
@@ -169,8 +182,9 @@ These endpoints are implemented:
 | `GET` | `/api/Rules` | List rules |
 | `GET` | `/api/Rules/{id}` | Retrieve a rule, including conditions |
 | `POST` | `/api/Rules/{ruleId}/conditions` | Add a rule condition |
+| `GET` | `/api/Rules/{ruleId}/evaluate/{businessId}` | Evaluate a stored rule against a stored business and its operational profile |
 
-**Not implemented yet:** An API endpoint that invokes `RuleEvaluator` for a stored rule and business; an `Applicable` / `NotApplicable` response model; and a corresponding React rule-evaluation interface.
+**Not implemented yet:** A React rule-evaluation interface and detailed explanations of individual condition results (planned for OWPS-14).
 
 ---
 
@@ -240,7 +254,7 @@ The project uses EF Core migrations for businesses, operational profiles, rules,
 - **OWPS-10 — Define Rule model:** Complete
 - **OWPS-11 — Persist Rules:** Complete
 - **OWPS-12 — Define Rule conditions:** Complete
-- **OWPS-13 — Evaluate Rule against Business profile:** Core engine and unit tests implemented; explicit applicability result and API integration remain
+- **OWPS-13 — Evaluate Rule against Business profile:** Complete — deterministic rule evaluation, explicit applicability result, and REST API integration
 - **OWPS-14 — Explain Rule evaluation:** Planned
 
 ### Broader Platform
