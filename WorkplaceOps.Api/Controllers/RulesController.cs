@@ -73,4 +73,31 @@ public class RulesController : ControllerBase
             return NotFound(new { message = exception.Message });
         }
     }
+
+    // GET: api/rules/{ruleId}/evaluate/{businessId}
+    [HttpGet("{ruleId:guid}/evaluate/{businessId:guid}")]
+    [ProducesResponseType(StatusCodes.Status200OK)]
+    [ProducesResponseType(StatusCodes.Status404NotFound)]
+    public async Task<IActionResult> EvaluateRuleForBusiness(
+        Guid ruleId,
+        Guid businessId)
+    {
+        try
+        {
+            var applicability = await _ruleService.EvaluateRuleForBusinessAsync(
+                ruleId,
+                businessId);
+
+            return Ok(new
+            {
+                ruleId,
+                businessId,
+                applicability = applicability.ToString()
+            });
+        }
+        catch (KeyNotFoundException exception)
+        {
+            return NotFound(new { message = exception.Message });
+        }
+    }
 }

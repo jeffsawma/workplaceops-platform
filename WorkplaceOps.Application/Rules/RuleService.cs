@@ -1,14 +1,26 @@
 ﻿using WorkplaceOps.Domain.Rules;
+using WorkplaceOps.Application.Businesses;
+
 
 namespace WorkplaceOps.Application.Rules;
 
 public class RuleService
 {
     private readonly IRuleRepository _ruleRepository;
+    private readonly IBusinessRepository _businessRepository;
+    private readonly IBusinessOperationalProfileRepository _profileRepository;
+    private readonly RuleEvaluator _ruleEvaluator;
 
-    public RuleService(IRuleRepository ruleRepository)
+    public RuleService(
+        IRuleRepository ruleRepository,
+        IBusinessRepository businessRepository,
+        IBusinessOperationalProfileRepository profileRepository,
+        RuleEvaluator ruleEvaluator)
     {
         _ruleRepository = ruleRepository;
+        _businessRepository = businessRepository;
+        _profileRepository = profileRepository;
+        _ruleEvaluator = ruleEvaluator;
     }
 
     public async Task<Rule> CreateRuleAsync(CreateRuleRequest request)
@@ -36,6 +48,30 @@ public class RuleService
     public async Task<Rule?> GetRuleByIdAsync(Guid id)
     {
         return await _ruleRepository.GetByIdAsync(id);
+    }
+
+    public async Task<RuleApplicability> EvaluateRuleForBusinessAsync(
+        Guid ruleId,
+        Guid businessId)
+    {
+        var rule = await _ruleRepository.GetByIdAsync(ruleId);
+
+        if (rule is null)
+        {
+            throw new KeyNotFoundException("Rule not found.");
+        }
+
+        var business = await _businessRepository.GetByIdAsync(businessId);
+
+        if (business is null)
+        {
+            throw new KeyNotFoundException("Business not found.");
+        }
+
+        var profile = await _profileRepository.GetByBusinessIdAsync(businessId);
+
+        return _ruleEvaluator.EvaluateApplicability(rule, business, profile);
+
     }
 
     public async Task<RuleCondition> AddConditionAsync(

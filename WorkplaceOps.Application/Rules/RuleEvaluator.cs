@@ -5,6 +5,21 @@ namespace WorkplaceOps.Application.Rules;
 
 public class RuleEvaluator
 {
+
+    // Evaluates the applicability of a rule to a given business and its operational profile
+    public RuleApplicability EvaluateApplicability(
+        Rule rule,
+        Business business,
+        BusinessOperationalProfile? profile)
+    {
+        bool isApplicable = Evaluate(rule, business, profile);
+
+        return isApplicable
+            ? RuleApplicability.Applicable
+            : RuleApplicability.NotApplicable;
+    }
+
+    // Evaluates whether a rule is satisfied based on the business and its operational profile
     public bool Evaluate(
         Rule rule,
         Business business,
@@ -26,6 +41,7 @@ public class RuleEvaluator
         return true;
     }
 
+    // Evaluates a single rule condition against the business and its operational profile
     private bool EvaluateCondition(
         RuleCondition condition,
         Business business,
@@ -70,6 +86,7 @@ public class RuleEvaluator
         };
     }
 
+    // Evaluates integer conditions based on the specified operator and comparison value
     private bool EvaluateIntegerCondition(
         int actualValue,
         RuleConditionOperator conditionOperator,
@@ -92,6 +109,7 @@ public class RuleEvaluator
         };
     }
 
+    // Evaluates boolean conditions based on the specified operator and comparison value
     private bool EvaluateBooleanCondition(
         bool actualValue,
         RuleConditionOperator conditionOperator,
@@ -110,6 +128,7 @@ public class RuleEvaluator
         };
     }
 
+    // Evaluates string conditions based on the specified operator and comparison value
     private bool EvaluateStringCondition(
         string? actualValue,
         RuleConditionOperator conditionOperator,

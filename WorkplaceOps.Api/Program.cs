@@ -25,6 +25,8 @@ builder.Services.AddScoped<BusinessOperationalProfileService>();
 builder.Services.AddScoped<IRuleRepository, RuleRepository>();
 builder.Services.AddScoped<RuleService>();
 
+builder.Services.AddScoped<RuleEvaluator>();
+
 
 builder.Services.AddControllers();
 

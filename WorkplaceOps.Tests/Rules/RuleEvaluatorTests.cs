@@ -492,4 +492,38 @@ public class RuleEvaluatorTests
 
         Assert.Equal(expectedResult, result);
     }
+
+
+    [Theory]
+    [InlineData(25, RuleApplicability.Applicable)]
+    [InlineData(15, RuleApplicability.NotApplicable)]
+    public void EvaluateApplicability_ReturnsExpectedResult(
+        int employeeCount,
+        RuleApplicability expectedResult)
+    {
+        var evaluator = new RuleEvaluator();
+
+        var rule = new Rule
+        {
+            IsActive = true,
+            Conditions =
+            [
+                new RuleCondition
+                {
+                    Field = RuleConditionField.EmployeeCount,
+                    Operator = RuleConditionOperator.GreaterThanOrEqual,
+                    ComparisonValue = "20"
+                }
+            ]
+        };
+
+        var business = new Business
+        {
+            EmployeeCount = employeeCount
+        };
+
+        var result = evaluator.EvaluateApplicability(rule, business, null);
+
+        Assert.Equal(expectedResult, result);
+    }
 }
