@@ -527,6 +527,7 @@ public class RuleEvaluatorTests
         Assert.Equal(expectedResult, result);
     }
 
+
     // Using TDD: Writing tests before implementing the functionality they verify
     [Fact]
     public void EvaluateWithExplanation_ExplainsMatchingEmployeeCountCondition()
@@ -566,6 +567,7 @@ public class RuleEvaluatorTests
 
         Assert.Contains("EmployeeCount", conditionResult.Explanation);
     }
+
 
     [Fact]
     public void EvaluateWithExplanation_IdentifiesMatchedAndFailedConditions()
@@ -616,5 +618,107 @@ public class RuleEvaluatorTests
         Assert.Contains("matched", result.Conditions[1].Explanation);
 
         Assert.Contains("1 of 2", result.Explanation);
+    }
+
+
+    [Fact]
+    public void EvaluateWithExplanation_ExplainMissingOperationalProfile()
+    {
+        var evaluator = new RuleEvaluator();
+
+        var rule = new Rule
+        {
+            IsActive = true,
+            Conditions =
+            [
+                new RuleCondition
+                {
+                    Field = RuleConditionField.Industry,
+                    Operator = RuleConditionOperator.Equal,
+                    ComparisonValue = "Technology"
+                }
+            ]
+        };
+
+        var business = new Business
+        {
+            EmployeeCount = 25
+        };
+
+        var result = evaluator.EvaluateWithExplanation(rule, business, null);
+
+        Assert.Equal(RuleApplicability.NotApplicable, result.Applicability);
+
+        var conditionResult = Assert.Single(result.Conditions);
+
+        Assert.False(conditionResult.IsSatisfied);
+        Assert.Null(conditionResult.ActualValue);
+
+        Assert.Contains(
+            "unavailable",
+            conditionResult.Explanation
+        );
+    }
+
+
+    [Fact]
+    public void EvaluateWithExplanation_ExplainsInactiveRule()
+    {
+        var evaluator = new RuleEvaluator();
+
+        var rule = new Rule
+        {
+            IsActive = false,
+            Conditions =
+            [
+                new RuleCondition
+                {
+                    Field = RuleConditionField.EmployeeCount,
+                    Operator = RuleConditionOperator.GreaterThanOrEqual,
+                    ComparisonValue = "20"
+                }
+            ]
+        };
+
+        var business = new Business
+        {
+            EmployeeCount = 25
+        };
+
+        var result = evaluator.EvaluateWithExplanation(
+            rule,
+            business,
+            null
+        );
+
+        Assert.Equal("The rule is inactive.", result.Explanation);
+
+        Assert.Empty(result.Conditions);
+    }
+
+
+    [Fact]
+    public void EvaluateWithExplanation_ExplainsRuleWithoutConditions()
+    {
+        var evaluator = new RuleEvaluator();
+
+        var rule = new Rule
+        {
+            IsActive = true,
+            Conditions = []
+        };
+
+        var business = new Business
+        {
+            EmployeeCount = 25
+        };
+
+        var result = evaluator.EvaluateWithExplanation(rule, business, null);
+
+        Assert.Equal(RuleApplicability.NotApplicable, result.Applicability);
+
+        Assert.Equal("The rule has no conditions.", result.Explanation);
+
+        Assert.Empty(result.Conditions);
     }
 }
