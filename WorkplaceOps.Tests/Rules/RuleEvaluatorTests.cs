@@ -526,4 +526,95 @@ public class RuleEvaluatorTests
 
         Assert.Equal(expectedResult, result);
     }
+
+    // Using TDD: Writing tests before implementing the functionality they verify
+    [Fact]
+    public void EvaluateWithExplanation_ExplainsMatchingEmployeeCountCondition()
+    {
+        var evaluator = new RuleEvaluator();
+
+        var rule = new Rule
+        {
+            IsActive = true,
+            Conditions =
+            [
+                new RuleCondition
+                {
+                    Field = RuleConditionField.EmployeeCount,
+                    Operator = RuleConditionOperator.GreaterThanOrEqual,
+                    ComparisonValue = "20"
+                }
+            ]
+        };
+
+        var business = new Business
+        {
+            EmployeeCount = 25
+        };
+
+        var result = evaluator.EvaluateWithExplanation(rule, business, null);
+
+        Assert.Equal(RuleApplicability.Applicable, result.Applicability);
+
+        Assert.False(string.IsNullOrWhiteSpace(result.Explanation));
+
+        var conditionResult = Assert.Single(result.Conditions);
+
+        Assert.True(conditionResult.IsSatisfied);
+        Assert.Equal("25", conditionResult.ActualValue);
+        Assert.Equal("20", conditionResult.ExpectedValue);
+
+        Assert.Contains("EmployeeCount", conditionResult.Explanation);
+    }
+
+    [Fact]
+    public void EvaluateWithExplanation_IdentifiesMatchedAndFailedConditions()
+    {
+        var evaluator = new RuleEvaluator();
+
+        var rule = new Rule
+        {
+            IsActive = true,
+            Conditions =
+            [
+                new RuleCondition
+                {
+                    Field = RuleConditionField.EmployeeCount,
+                    Operator = RuleConditionOperator.GreaterThanOrEqual,
+                    ComparisonValue = "20"
+                },
+
+                new RuleCondition
+                {
+                    Field = RuleConditionField.Industry,
+                    Operator = RuleConditionOperator.Equal,
+                    ComparisonValue = "Technology"
+                }
+            ]
+        };
+
+        var business = new Business
+        {
+            EmployeeCount = 15
+        };
+
+        var profile = new BusinessOperationalProfile
+        {
+            Industry = "Technology"
+        };
+
+        var result = evaluator.EvaluateWithExplanation(rule, business, profile);
+
+        Assert.Equal(RuleApplicability.NotApplicable, result.Applicability);
+
+        Assert.Equal(2, result.Conditions.Count);
+
+        Assert.False(result.Conditions[0].IsSatisfied);
+        Assert.True(result.Conditions[1].IsSatisfied);
+
+        Assert.Contains("failed", result.Conditions[0].Explanation);
+        Assert.Contains("matched", result.Conditions[1].Explanation);
+
+        Assert.Contains("1 of 2", result.Explanation);
+    }
 }

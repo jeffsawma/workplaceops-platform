@@ -1,4 +1,5 @@
-﻿using WorkplaceOps.Domain.Businesses;
+﻿using System.Globalization;
+using WorkplaceOps.Domain.Businesses;
 using WorkplaceOps.Domain.Rules;
 
 namespace WorkplaceOps.Application.Rules;
@@ -18,6 +19,91 @@ public class RuleEvaluator
             ? RuleApplicability.Applicable
             : RuleApplicability.NotApplicable;
     }
+
+    // Implementing EvaluateWithExplanation() method to provide detailed explanation of rule evaluation
+    public RuleEvaluationResult EvaluateWithExplanation(
+    Rule rule,
+    Business business,
+    BusinessOperationalProfile? profile)
+    {
+        if (!rule.IsActive)
+        {
+            return new RuleEvaluationResult(
+                RuleApplicability.NotApplicable,
+                "The rule is inactive.",
+                []
+            );
+        }
+
+        if (rule.Conditions.Count == 0)
+        {
+            return new RuleEvaluationResult(
+                RuleApplicability.NotApplicable,
+                "The rule has no conditions.",
+                []
+            );
+        }
+
+        var conditionResults = new List<RuleConditionEvaluationResult>();
+
+        foreach (var condition in rule.Conditions)
+        {
+            bool isSatisfied = EvaluateCondition(condition, business, profile);
+
+            string? actualValue = condition.Field switch
+            {
+                RuleConditionField.EmployeeCount =>
+                    business.EmployeeCount.ToString(CultureInfo.InvariantCulture),
+
+                RuleConditionField.LocationCount =>
+                    profile?.LocationCount.ToString(CultureInfo.InvariantCulture),
+
+                RuleConditionField.Industry =>
+                    profile?.Industry,
+
+                RuleConditionField.HasRemoteEmployees =>
+                    profile?.HasRemoteEmployees.ToString().ToLowerInvariant(),
+
+                RuleConditionField.HasUnionizedEmployees =>
+                    profile?.HasUnionizedEmployees.ToString().ToLowerInvariant(),
+
+                _ => null
+            };
+
+            string explanation =
+                $"{condition.Field}: actual value '{actualValue ?? "unavailable"}' " +
+                $"{(isSatisfied ? "matched" : "failed")} the condition " +
+                $"'{condition.Operator} {condition.ComparisonValue}'.";
+
+            conditionResults.Add(
+                new RuleConditionEvaluationResult(
+                    condition.Field,
+                    condition.Operator,
+                    actualValue,
+                    condition.ComparisonValue,
+                    isSatisfied,
+                    explanation
+                )
+            );
+        }
+
+        int failedCount = conditionResults.Count(result => !result.IsSatisfied);
+
+        RuleApplicability applicability = failedCount == 0
+            ? RuleApplicability.Applicable
+            : RuleApplicability.NotApplicable;
+
+        string overallExplanation = failedCount == 0
+            ? $"The rule applies because all {conditionResults.Count} conditions matched."
+            : $"The rule does not apply because {failedCount} of {conditionResults.Count} conditions failed.";
+
+        return new RuleEvaluationResult(
+            applicability,
+            overallExplanation,
+            conditionResults
+        );
+    }
+
 
     // Evaluates whether a rule is satisfied based on the business and its operational profile
     public bool Evaluate(
